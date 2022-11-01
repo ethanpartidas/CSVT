@@ -61,7 +61,7 @@ void print_crossbar(crossbar *cb) {
 	printf("cols %d\n", cb->cols);
 	for (int i = 0; i < cb->rows; ++i) {
 		for (int j = 0; j < cb->cols; ++j) {
-			printf("%d", cb->grid[i][j]);
+			printf("%d", literal_to_int(cb->grid[i][j]));
 			if (j != cb->cols-1) {
 				printf("\t");
 			}
