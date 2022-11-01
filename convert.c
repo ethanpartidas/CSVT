@@ -7,13 +7,13 @@ void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename) {
 	cb->rows = bdd->nodes - 1;
 	// number of cols is number of edges that don't go to 0
 	cb->cols = 0;
-	for (int i = 0; i < bdd->nodes; ++i) {
+	for (int i = 1; i <= bdd->nodes; ++i) {
 		int l = bdd->node_array[i].left_child;
 		int r = bdd->node_array[i].right_child;
-		if (l != -1 && bdd->node_array[l-1].decision_variable != 0) {
+		if (l != -1 && bdd->node_array[l].decision_variable != 0) {
 			++cb->cols;
 		}
-		if (r != -1 && bdd->node_array[r-1].decision_variable != 0) {
+		if (r != -1 && bdd->node_array[r].decision_variable != 0) {
 			++cb->cols;
 		}
 	}
@@ -22,7 +22,7 @@ void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename) {
 		cb->grid[row] = calloc(cb->cols, sizeof(literal));
 	}
 	int current_col = 0;
-	for (int i = 0; i < bdd->nodes-2; ++i) {
+	for (int i = 1; i <= bdd->nodes-2; ++i) {
 		int l = bdd->node_array[i].left_child;
 		int r = bdd->node_array[i].right_child;
 		int v = bdd->node_array[i].decision_variable;
@@ -31,13 +31,13 @@ void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename) {
 			positive = 0;
 			v = -v;
 		}
-		if (l != -1 && bdd->node_array[l-1].decision_variable != 0) {
-			cb->grid[cb->rows-1-i][current_col] = (literal) {v, positive};
+		if (l != -1 && bdd->node_array[l].decision_variable != 0) {
+			cb->grid[cb->rows-i][current_col] = (literal) {v, positive};
 			if (l == bdd->nodes) --l;
 			cb->grid[cb->rows-l][current_col++] = ONE_l;
 		}
-		if (r != -1 && bdd->node_array[r-1].decision_variable != 0) {
-			cb->grid[cb->rows-1-i][current_col] = (literal) {v, !positive};
+		if (r != -1 && bdd->node_array[r].decision_variable != 0) {
+			cb->grid[cb->rows-i][current_col] = (literal) {v, !positive};
 			if (r == bdd->nodes) --r;
 			cb->grid[cb->rows-r][current_col++] = ONE_l;
 		}
