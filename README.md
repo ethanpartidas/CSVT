@@ -1,5 +1,16 @@
 # Crossbar Synthesis and Verification Tool
 
+### How To Run
+
+Run the following commands in a terminal:
+```
+git clone https://github.com/ethanpartidas/CSVT.git
+cd CSVT
+make
+./test
+```
+On Windows, the executable will be called test.exe
+
 ### The Problem with BDDs
 
 There is an inherent limitation to generating crossbars from BDDs. Each node in a BDD has
