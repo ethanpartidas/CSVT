@@ -28,7 +28,7 @@ typedef struct crossbar_workspace {
 
 crossbar_workspace *create_crossbar_workspace(NDDD *nddd);
 
-void free_crossbar_workspace(crossbar_workspace *cbws);
+void free_crossbar_workspace(crossbar_workspace *cbws, crossbar *cb);
 
 void convert_NDDD_to_crossbar_helper(NDDD *nddd, crossbar_workspace *cbws, int row, int col);
 

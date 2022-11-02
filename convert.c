@@ -179,10 +179,14 @@ crossbar_workspace *create_crossbar_workspace(NDDD *nddd) {
 	return cbws;
 }
 
-void free_crossbar_workspace(crossbar_workspace *cbws) {
+void free_crossbar_workspace(crossbar_workspace *cbws, crossbar *cb) {
 	// we will leave some rows for the subsequent crossbar
 	for (int row = cbws->rows; row < MAX_CROSSBAR_SIZE; ++row) {
 		free(cbws->grid[row]);
+	}
+	// resize leftover rows
+	for (int row = 0; row < cb->rows; ++row) {
+		cb->grid[row] = realloc(cb->grid[row], cb->cols * sizeof(literal));
 	}
 	free(cbws->row_pointers);
 	free(cbws->col_pointers);
@@ -286,7 +290,7 @@ crossbar *convert_NDDD_to_crossbar(NDDD *nddd) {
 	cb->rows = cbws->rows;
 	cb->cols = cbws->cols;
 	cb->grid = cbws->grid;
-	free_crossbar_workspace(cbws);
+	free_crossbar_workspace(cbws, cb);
 
 	// reorder rows
 	for (int row = 1; row < (cb->rows+1)/2; ++row) {
