@@ -13,13 +13,13 @@ On Windows, the executable will be called test.exe
 
 ### The Problem with BDDs
 
-There is an inherent limitation to generating crossbars from BDDs. Each node in a BDD has
-at most 2 edges coming from it, so the total number of edges is proportional to the number
-of nodes. On the crossbar, the nodes represent rows and columns, and the edges represent
-memristors. Thus, the number of memristors is O(n) whereas the number of intersections in
-the crossbar is O(n^2), where n is the number of nodes in the BDD. For large n, this creates
-crossbars that are very sparsely populated by memristors. As seen in the example 25 variable
-crossbar, it is mostly 0s.
+There is an inherent limitation to generating crossbars from BDDs. Each node in a BDD has at most 2
+edges coming from it, so the total number of edges is proportional to the number of nodes. On the
+crossbar, the nodes represent rows and columns, and the edges represent input memristors. Thus, the
+number of input memristors is O(n) whereas the number of intersections in the crossbar is O(n^2),
+where n is the number of nodes in the BDD. For large n, this creates crossbars that are very
+sparsely populated by input memristors. As seen in the example 25 variable crossbar, it is mostly
+0s.
 
 ### An Alternative Approach
 
@@ -49,17 +49,15 @@ as such will have a similar format for its logic function: a sum of terms. Here 
 
 ```
    C0  C1  C2  C3
-R0 0---0---0---1
+R0 g---h---i---1
    |   |   |   |
-R1 g---h---i---1
+R1 d---e---f---1
    |   |   |   |
-R2 d---e---f---1
-   |   |   |   |
-R3 a---b---c---0
+R2 a---b---c---0
 ```
 
 This looks a lot more complicated, but all I've done here add an extra row of variables, and connect
-R1 and R2 to R0, so they work as pseudo-output rows. The logic representation of this crossbar is:
+R1 to R0, so they both work as output rows. The logic representation of this crossbar is:
 
 ```
 a(d + g) + b(e + h) + c(f + i)
@@ -162,9 +160,7 @@ a(g + h + i) + b + c + d
 The algorithm above generates the following crossbar:
 
 ```
-0---1---1---1
-|   |   |   |
-i---1---0---0
+i---1---1---1
 |   |   |   |
 h---1---0---0
 |   |   |   |
