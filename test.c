@@ -194,6 +194,9 @@ int main(int argc, char **argv) {
 	printf("Converting ex6.expr to ex6.xbar...\n");
 	convert_expression_to_crossbar("./exprs/ex6.expr", "./exprs/ex6.xbar");
 	printf("\n");
+	printf("Converting ex7.expr to ex7.xbar...\n");
+	convert_expression_to_crossbar("./exprs/ex7.expr", "./exprs/ex7.xbar");
+	printf("\n");
 	printf("\n");
 	printf("\n");
 	printf("Extra: Verifying equivalence of boolean expressions and crossbars\n");
@@ -216,6 +219,12 @@ int main(int argc, char **argv) {
 	printf("Verifying ex6...\n");
 	start = clock();
 	check_equivalence_expression_crossbar("./exprs/ex6.expr", "./exprs/ex6.xbar");
+	end = clock();
+	printf("Time: %.3f seconds\n", (double) (end - start) / CLOCKS_PER_SEC);
+	printf("\n");
+	printf("Verifying ex7...\n");
+	start = clock();
+	check_equivalence_expression_crossbar("./exprs/ex7.expr", "./exprs/ex7.xbar");
 	end = clock();
 	printf("Time: %.3f seconds\n", (double) (end - start) / CLOCKS_PER_SEC);
 	printf("\n");
