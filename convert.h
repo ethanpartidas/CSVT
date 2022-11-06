@@ -12,7 +12,7 @@
 
 void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename);
 
-void check_equivalence(char *bdd_filename, char *crossbar_filename);
+void check_equivalence_BDD_crossbar(char *bdd_filename, char *crossbar_filename);
 
 NDDD *factor_SOP(SOP *sop);
 
@@ -39,5 +39,7 @@ void convert_SOP_to_crossbar(char *sop_filename, char *crossbar_filename);
 NDDD *convert_expression_to_NDDD(expr_node *en);
 
 void convert_expression_to_crossbar(char *expr_filename, char *crossbar_filename);
+
+void check_equivalence_expression_crossbar(char *expr_filename, char *crossbar_filename);
 
 #endif

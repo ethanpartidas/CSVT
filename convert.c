@@ -47,7 +47,7 @@ void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename) {
 	free_BDD(bdd);
 }
 
-void check_equivalence(char *bdd_filename, char *crossbar_filename) {
+void check_equivalence_BDD_crossbar(char *bdd_filename, char *crossbar_filename) {
 	BDD *bdd = read_BDD(bdd_filename);
 	crossbar *cb = read_crossbar(crossbar_filename);
 
@@ -360,4 +360,39 @@ void convert_expression_to_crossbar(char *expr_filename, char *crossbar_filename
 	crossbar *cb = convert_NDDD_to_crossbar(nddd);
 	save_crossbar(cb, crossbar_filename);
 	free_crossbar(cb);
+}
+
+void check_equivalence_expression_crossbar(char *expr_filename, char *crossbar_filename) {
+	expr_node *en = read_expression(expr_filename);
+	crossbar *cb = read_crossbar(crossbar_filename);
+
+	if (en->nvars != cb->vars) {
+		printf("Number of variables do not match.\n");
+		free_expression(en);
+		free_crossbar(cb);
+		return;
+	}
+
+	graph *g = convert_crossbar_to_graph(cb);
+	free_crossbar(cb);
+
+	int input[en->nvars];
+	memset(input, 0, en->nvars * sizeof(int));
+
+	for (int i = 0; i < 1<<en->nvars; ++i) {
+		int i_copy = i;
+		for (int j = 0; j < en->nvars; ++j) {
+			input[j] = i_copy % 2;
+			i_copy /= 2;
+		}
+		if (evaluate_expression(en, input) != evaluate_graph(g, input)) {
+			printf("The representations are not equivalent!\n");
+			free_expression(en);
+			free_graph(g);
+			return;
+		}
+	}
+	printf("The representations are equivalent!\n");
+	free_expression(en);
+	free_graph(g);
 }

@@ -21,4 +21,6 @@ void free_expression(expr_node *en);
 
 void print_expression(expr_node *en);
 
+int evaluate_expression(expr_node *en, int *input);
+
 #endif

@@ -55,3 +55,17 @@ void print_expression(expr_node *en) {
 		printf("%d ", literal_to_int(en->val));
 	}
 }
+
+int evaluate_expression(expr_node *en, int *input) {
+	if (en->op == '+') {
+		return evaluate_expression(en->left_child, input) || evaluate_expression(en->right_child, input);
+	} else if (en->op == '*') {
+		return evaluate_expression(en->left_child, input) && evaluate_expression(en->right_child, input);
+	} else {
+		if (en->val.val == 0) {
+			return en->val.positive;
+		} else {
+			return input[en->val.val-1] == en->val.positive;
+		}
+	}
+}
