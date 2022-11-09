@@ -18,4 +18,6 @@ void free_SOP_clone(SOP *sop);
 
 void print_SOP(SOP *sop);
 
+int evaluate_SOP(SOP *sop, int *input);
+
 #endif

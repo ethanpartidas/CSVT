@@ -39,43 +39,25 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	if (argc == 3) {
-		if (filetype1 == Xbar) {
-			printf("Cannot convert from crossbar\n");
-			return 0;
-		}
-		if (filetype2 != Xbar) {
-			printf("Can only convert to crossbar\n");
-			return 0;
-		}
-
-		if (filetype1 == Bdd) {
+		if (filetype1 == Bdd && filetype2 == Xbar) {
 			convert_BDD_to_crossbar(argv[1], argv[2]);
-		}
-		if (filetype1 == Sop) {
+		} else if (filetype1 == Sop && filetype2 == Xbar) {
 			convert_SOP_to_crossbar(argv[1], argv[2]);
-		}
-		if (filetype1 == Expr) {
+		} else if (filetype1 == Expr && filetype2 == Xbar) {
 			convert_expression_to_crossbar(argv[1], argv[2]);
+		} else {
+			printf("Unsupported conversion\n");
 		}
 	} else if (argc == 4) {
 		if (strcmp(argv[3], "-v") == 0) {
-			if (filetype1 == Xbar) {
-				printf("Cannot verify from crossbar\n");
-				return 0;
-			}
-			if (filetype2 != Xbar) {
-				printf("Can only verify to crossbar\n");
-				return 0;
-			}
-
-			if (filetype1 == Bdd) {
+			if (filetype1 == Bdd && filetype2 == Xbar) {
 				check_equivalence_BDD_crossbar(argv[1], argv[2]);
-			}
-			if (filetype1 == Sop) {
-				printf("SOP verification currently not supported\n");
-			}
-			if (filetype1 == Expr) {
+			}else if (filetype1 == Sop && filetype2 == Xbar) {
+				check_equivalence_SOP_crossbar(argv[1], argv[2]);
+			}else if (filetype1 == Expr && filetype2 == Xbar) {
 				check_equivalence_expression_crossbar(argv[1], argv[2]);
+			} else {
+				printf("Unsupported verification\n");
 			}
 		} else {
 			printf("Invalid argument\n");

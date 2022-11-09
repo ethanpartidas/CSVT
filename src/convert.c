@@ -84,7 +84,7 @@ void check_equivalence_BDD_crossbar(char *bdd_filename, char *crossbar_filename)
 
 // the basic principle: find the most common literal, and split the problem into 2 smaller SOPs
 // ex: SOP -> a(SOP1) + SOP2. SOP1 is a's child and SOP2 is its sibling.
-NDDD *factor_SOP(SOP *sop) {
+NDDD *convert_SOP_to_NDDD(SOP *sop) {
 	// base case: empty SOP returns a null pointer
 	if (sop->nterms == 0) {
 		return NULL;
@@ -154,8 +154,8 @@ NDDD *factor_SOP(SOP *sop) {
 	NDDD *nddd = malloc(sizeof(NDDD));
 	nddd->nvars = sop->nvars;
 	nddd->val = (literal) {max_var + 1, max_i};
-	nddd->child = factor_SOP(sop1);
-	nddd->sibling = factor_SOP(sop2);
+	nddd->child = convert_SOP_to_NDDD(sop1);
+	nddd->sibling = convert_SOP_to_NDDD(sop2);
 
 	free_SOP_clone(sop1);
 	free_SOP_clone(sop2);
@@ -307,7 +307,7 @@ crossbar *convert_NDDD_to_crossbar(NDDD *nddd) {
 
 void convert_SOP_to_crossbar(char *sop_filename, char *crossbar_filename) {
 	SOP *sop = read_SOP(sop_filename);
-	NDDD *nddd = factor_SOP(sop);
+	NDDD *nddd = convert_SOP_to_NDDD(sop);
 	free_SOP(sop);
 	crossbar *cb = convert_NDDD_to_crossbar(nddd);
 	free_NDDD(nddd);
@@ -394,5 +394,40 @@ void check_equivalence_expression_crossbar(char *expr_filename, char *crossbar_f
 	}
 	printf("The representations are equivalent!\n");
 	free_expression(en);
+	free_graph(g);
+}
+
+void check_equivalence_SOP_crossbar(char *sop_filename, char *crossbar_filename) {
+	SOP *sop = read_SOP(sop_filename);
+	crossbar *cb = read_crossbar(crossbar_filename);
+
+	if (sop->nvars != cb->vars) {
+		printf("Number of variables do not match.\n");
+		free_SOP(sop);
+		free_crossbar(cb);
+		return;
+	}
+
+	graph *g = convert_crossbar_to_graph(cb);
+	free_crossbar(cb);
+
+	int input[sop->nvars];
+	memset(input, 0, sop->nvars * sizeof(int));
+
+	for (int i = 0; i < 1<<sop->nvars; ++i) {
+		int i_copy = i;
+		for (int j = 0; j < sop->nvars; ++j) {
+			input[j] = i_copy % 2;
+			i_copy /= 2;
+		}
+		if (evaluate_SOP(sop, input) != evaluate_graph(g, input)) {
+			printf("The representations are not equivalent!\n");
+			free_SOP(sop);
+			free_graph(g);
+			return;
+		}
+	}
+	printf("The representations are equivalent!\n");
+	free_SOP(sop);
 	free_graph(g);
 }

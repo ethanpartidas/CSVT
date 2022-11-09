@@ -54,3 +54,20 @@ void print_SOP(SOP *sop) {
 		printf("0\n");
 	}
 }
+
+int evaluate_SOP(SOP *sop, int *input) {
+	for (int term = 0; term < sop->nterms; ++term) {
+		int satisfied = 1;
+		for (int var = 0; var < sop->nvars; ++var) {
+			if (sop->terms[term][var] == 1 && input[var] == 0
+			|| sop->terms[term][var] == -1 && input[var] == 1) {
+				satisfied = 0;
+				break;
+			}
+		}
+		if (satisfied) {
+			return 1;
+		}
+	}
+	return 0;
+}
