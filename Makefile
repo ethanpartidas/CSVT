@@ -1,2 +1,2 @@
 all:
-	gcc *.c -o test -O3
+	gcc src/*.c -o CSVT -O3

@@ -7,9 +7,11 @@ Run the following commands in a terminal:
 git clone https://github.com/ethanpartidas/CSVT.git
 cd CSVT
 make
-./test
+./CSVT file1 file2 [-v]
 ```
-On Windows, the executable will be called test.exe
+On Windows, the executable will be called CSVT.exe
+This command converts a BDD, SOP expression, or boolean expression into a crossbar. With the -v
+option, it verifies the equivalence of a BDD and crossbar, or boolean expression and crossbar.
 
 ### The Problem with BDDs
 
