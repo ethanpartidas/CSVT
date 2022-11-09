@@ -10,6 +10,7 @@ make
 ./CSVT file1 file2 [-v]
 ```
 On Windows, the executable will be called CSVT.exe
+
 This command converts a BDD, SOP expression, or boolean expression into a crossbar. With the -v
 option, it verifies the equivalence of a BDD and crossbar, or boolean expression and crossbar.
 
