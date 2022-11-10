@@ -1,5 +1,40 @@
 #include "convert.h"
 
+// The idea behind this algorithm is to create a SOP for each node, and propagate the functions down
+// the BDD. The BDD is assumed to be topologically sorted.
+void convert_BDD_to_SOP(char *bdd_filename, char *sop_filename) {
+	BDD *bdd = read_BDD(bdd_filename);
+	SOP_list *sops[bdd->nodes+1];
+	memset(sops, 0, (bdd->nodes+1) * sizeof(SOP_list *));
+	sops[1] = malloc(sizeof(SOP_list));
+	sops[1]->nvars = bdd->vars;
+	sops[1]->term = calloc(bdd->nodes, sizeof(int));
+	sops[1]->next = NULL;
+
+	for (int node = 1; node <= bdd->nodes; ++node) {
+		int l = bdd->node_array[node].left_child;
+		int r = bdd->node_array[node].right_child;
+		int var = bdd->node_array[node].decision_variable;
+		if (l != -1 && bdd->node_array[l].decision_variable != 0) {
+			SOP_list *temp = copy_SOP_list(sops[node]);
+			multiply_SOP_list(temp, var);
+			add_SOP_list(temp, sops[l]);
+			sops[l] = temp;
+		}
+		if (r != -1 && bdd->node_array[r].decision_variable != 0) {
+			SOP_list *temp = copy_SOP_list(sops[node]);
+			multiply_SOP_list(temp, -var);
+			add_SOP_list(temp, sops[r]);
+			sops[r] = temp;
+		}
+	}
+
+	save_SOP_list(sops[bdd->nodes], sop_filename);
+	for (int node = 1; node <= bdd->nodes; ++node) {
+		free_SOP_list(sops[node]);
+	}
+}
+
 void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename) {
 	BDD *bdd = read_BDD(bdd_filename);
 	crossbar *cb = malloc(sizeof(crossbar));

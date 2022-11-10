@@ -39,7 +39,9 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 	if (argc == 3) {
-		if (filetype1 == Bdd && filetype2 == Xbar) {
+		if (filetype1 == Bdd && filetype2 == Sop) {
+			convert_BDD_to_SOP(argv[1], argv[2]);
+		} else if (filetype1 == Bdd && filetype2 == Xbar) {
 			convert_BDD_to_crossbar(argv[1], argv[2]);
 		} else if (filetype1 == Sop && filetype2 == Xbar) {
 			convert_SOP_to_crossbar(argv[1], argv[2]);

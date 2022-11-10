@@ -12,6 +12,8 @@
 
 // Conversion
 
+void convert_BDD_to_SOP(char *bdd_filename, char *sop_filename);
+
 void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename);
 
 #define MAX_CROSSBAR_SIZE 256
