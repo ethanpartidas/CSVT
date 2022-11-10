@@ -36,6 +36,38 @@ void convert_BDD_to_SOP(char *bdd_filename, char *sop_filename) {
 	iterated_consensus(sop_filename);
 }
 
+void check_equivalence_BDD_SOP(char *bdd_filename, char *sop_filename) {
+	BDD *bdd = read_BDD(bdd_filename);
+	SOP *sop = read_SOP(sop_filename);
+
+	if (bdd->vars != sop->nvars) {
+		printf("Number of variables do not match.\n");
+		free_BDD(bdd);
+		free_SOP(sop);
+		return;
+	}
+
+	int input[bdd->vars];
+	memset(input, 0, bdd->vars * sizeof(int));
+
+	for (int i = 0; i < 1<<bdd->vars; ++i) {
+		int i_copy = i;
+		for (int j = 0; j < bdd->vars; ++j) {
+			input[j] = i_copy % 2;
+			i_copy /= 2;
+		}
+		if (evaluate_BDD(bdd, input) != evaluate_SOP(sop, input)) {
+			printf("The representations are not equivalent!\n");
+			free_BDD(bdd);
+			free_SOP(sop);
+			return;
+		}
+	}
+	printf("The representations are equivalent!\n");
+	free_BDD(bdd);
+	free_SOP(sop);
+}
+
 void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename) {
 	BDD *bdd = read_BDD(bdd_filename);
 	crossbar *cb = malloc(sizeof(crossbar));

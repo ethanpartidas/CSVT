@@ -37,6 +37,8 @@ void convert_expression_to_crossbar(char *expr_filename, char *crossbar_filename
 
 // Verification
 
+void check_equivalence_BDD_SOP(char *bdd_filename, char *sop_filename);
+
 void check_equivalence_BDD_crossbar(char *bdd_filename, char *crossbar_filename);
 
 void check_equivalence_SOP_crossbar(char *sop_filename, char *crossbar_filename);

@@ -52,7 +52,9 @@ int main(int argc, char **argv) {
 		}
 	} else if (argc == 4) {
 		if (strcmp(argv[3], "-v") == 0) {
-			if (filetype1 == Bdd && filetype2 == Xbar) {
+			if (filetype1 == Bdd && filetype2 == Sop) {
+				check_equivalence_BDD_SOP(argv[1], argv[2]);
+			} else if (filetype1 == Bdd && filetype2 == Xbar) {
 				check_equivalence_BDD_crossbar(argv[1], argv[2]);
 			}else if (filetype1 == Sop && filetype2 == Xbar) {
 				check_equivalence_SOP_crossbar(argv[1], argv[2]);
