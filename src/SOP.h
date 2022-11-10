@@ -38,4 +38,7 @@ void add_SOP_list(SOP_list *sopl1, SOP_list *sopl2);
 
 void multiply_SOP_list(SOP_list *sopl, int val);
 
+void SCC_minimal(SOP *sop);
+void iterated_consensus(char *sop_filename);
+
 #endif

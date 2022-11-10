@@ -156,3 +156,90 @@ void multiply_SOP_list(SOP_list *sopl, int val) {
 		node->term[var] = positive;
 	}
 }
+
+void SCC_minimal(SOP *sop) {
+	int change;
+	do {
+		change = 0;
+		for (int term1 = 0; term1 < sop->nterms; ++term1) {
+			for (int term2 = 0; term2 < sop->nterms; ++term2) {
+				if (term1 == term2) {
+					continue;
+				}
+				int contained = 1;
+				for (int var = 0; var < sop->nvars; ++var) {
+					int a = sop->terms[term1][var];
+					int b = sop->terms[term2][var];
+					if (a == 0 && b != 0 || a * b == -1) {
+						contained = 0;
+						break;
+					}
+				}
+				if (contained) {
+					change = 1;
+					free(sop->terms[term1]);
+					sop->terms[term1] = sop->terms[--sop->nterms];
+				}
+			}
+		}
+	} while (change);
+}
+
+void iterated_consensus(char *sop_filename) {
+	SOP *sop = read_SOP(sop_filename);
+	SCC_minimal(sop);
+	int change;
+	do {
+		change = 0;
+		for (int term1 = 0; term1 < sop->nterms-1; ++term1) {
+			for (int term2 = term1+1; term2 < sop->nterms; ++term2) {
+				int delta = 0;
+				for (int var = 0; var < sop->nvars; ++var) {
+					if (sop->terms[term1][var] * sop->terms[term2][var] == -1) {
+						++delta;
+					}
+				}
+				if (delta != 1) {
+					continue;
+				}
+				int *new_term = malloc(sop->nvars * sizeof(int));
+				for (int var = 0; var < sop->nvars; ++var) {
+					int a = sop->terms[term1][var];
+					int b = sop->terms[term2][var];
+					if (a * b == -1) {
+						new_term[var] = 0;
+					} else if (a == 0) {
+						new_term[var] = b;
+					} else {
+						new_term[var] = a;
+					}
+				}
+				int skip = 0;
+				for (int term = 0; term < sop->nterms; ++term) {
+					int contained = 1;
+					for (int var = 0; var < sop->nvars; ++var) {
+						int a = new_term[var];
+						int b = sop->terms[term][var];
+						if (a == 0 && b != 0 || a * b == -1) {
+							contained = 0;
+							break;
+						}
+					}
+					if (contained) {
+						skip = 1;
+						break;
+					}
+				}
+				if (skip) {
+					continue;
+				}
+				change = 1;
+				sop->terms = realloc(sop->terms, (sop->nterms+1) * sizeof(int *));
+				sop->terms[sop->nterms++] = new_term;
+				SCC_minimal(sop);
+			}
+		}
+	} while (change);
+	save_SOP(sop, sop_filename);
+	free_SOP(sop);
+}
