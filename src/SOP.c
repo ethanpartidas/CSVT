@@ -179,7 +179,11 @@ void SCC_minimal(SOP *sop) {
 					change = 1;
 					free(sop->terms[term1]);
 					sop->terms[term1] = sop->terms[--sop->nterms];
+					break;
 				}
+			}
+			if (change) {
+				break;
 			}
 		}
 	} while (change);
