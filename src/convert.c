@@ -72,42 +72,108 @@ void convert_BDD_to_crossbar(char *bdd_filename, char *crossbar_filename) {
 	BDD *bdd = read_BDD(bdd_filename);
 	crossbar *cb = malloc(sizeof(crossbar));
 	cb->vars = bdd->vars;
-	cb->rows = bdd->nodes - 1;
-	// number of cols is number of edges that don't go to 0
+
+	// 0 is undetermined, 1 is row, 2 is column
+	int row_or_column[bdd->nodes+1];
+	memset(row_or_column, 0, (bdd->nodes+1) * sizeof(int));
+	row_or_column[1] = 1;
+	row_or_column[bdd->nodes] = 1;
+	cb->rows = 2;
 	cb->cols = 0;
-	for (int i = 1; i <= bdd->nodes; ++i) {
-		int l = bdd->node_array[i].left_child;
-		int r = bdd->node_array[i].right_child;
-		if (l != -1 && bdd->node_array[l].decision_variable != 0) {
-			++cb->cols;
+	for (int node = 1; node <= bdd->nodes-2; ++node) {
+		int l = bdd->node_array[node].left_child;
+		int r = bdd->node_array[node].right_child;
+		if (bdd->node_array[l].decision_variable != 0) {
+			if (row_or_column[l] == 0) {
+				if (row_or_column[node] == 1) {
+					row_or_column[l] = 2;
+					++cb->cols;
+				} else if (row_or_column[node] == 2) {
+					row_or_column[l] = 1;
+					++cb->rows;
+				}
+			} else {
+				if (row_or_column[node] == 1 && row_or_column[l] == 1) {
+					++cb->cols;
+				} else if (row_or_column[node] == 2 && row_or_column[l] == 2) {
+					++cb->rows;
+				}
+			}
 		}
-		if (r != -1 && bdd->node_array[r].decision_variable != 0) {
-			++cb->cols;
+		if (bdd->node_array[r].decision_variable != 0) {
+			if (row_or_column[r] == 0) {
+				if (row_or_column[node] == 1) {
+					row_or_column[r] = 2;
+					++cb->cols;
+				} else if (row_or_column[node] == 2){
+					row_or_column[r] = 1;
+					++cb->rows;
+				}
+			} else {
+				if (row_or_column[node] == 1 && row_or_column[r] == 1) {
+					++cb->cols;
+				} else if (row_or_column[node] == 2 && row_or_column[r] == 2) {
+					++cb->rows;
+				}
+			}
 		}
 	}
+
+	// assign nodes to rows and columns
+	int index[bdd->nodes+1];
+	memset(index, 0, (bdd->nodes+1) * sizeof(int));
+	int current_row = cb->rows-1;
+	int current_col = 0;
+	index[1] = current_row--;
+	index[bdd->nodes] = 0;
+	for (int node = 2; node <= bdd->nodes-2; ++node) {
+		if (row_or_column[node] == 1) {
+			index[node] = current_row--;
+		} else {
+			index[node] = current_col++;
+		}
+	}
+
 	cb->grid = malloc(cb->rows * sizeof(literal *));
 	for (int row = 0; row < cb->rows; ++row) {
 		cb->grid[row] = calloc(cb->cols, sizeof(literal));
 	}
-	int current_col = 0;
-	for (int i = 1; i <= bdd->nodes-2; ++i) {
-		int l = bdd->node_array[i].left_child;
-		int r = bdd->node_array[i].right_child;
-		int v = bdd->node_array[i].decision_variable;
+	for (int node = 1; node <= bdd->nodes-2; ++node) {
+		int l = bdd->node_array[node].left_child;
+		int r = bdd->node_array[node].right_child;
+		int v = bdd->node_array[node].decision_variable;
 		int positive = 1;
 		if (v < 0) {
 			positive = 0;
 			v = -v;
 		}
-		if (l != -1 && bdd->node_array[l].decision_variable != 0) {
-			cb->grid[cb->rows-i][current_col] = (literal) {v, positive};
-			if (l == bdd->nodes) --l;
-			cb->grid[cb->rows-l][current_col++] = ONE_l;
+		if (bdd->node_array[l].decision_variable != 0) {
+			literal val = {v, positive};
+			if (row_or_column[node] == 1 && row_or_column[l] == 2) {
+				cb->grid[index[node]][index[l]] = val;
+			} else if (row_or_column[node] == 2 && row_or_column[l] == 1) {
+				cb->grid[index[l]][index[node]] = val;
+			} else if (row_or_column[node] == 1 && row_or_column[l] == 1) {
+				cb->grid[index[node]][current_col] = val;
+				cb->grid[index[l]][current_col++] = ONE_l;
+			} else if (row_or_column[node] == 2 && row_or_column[l] == 2) {
+				cb->grid[current_row][index[node]] = val;
+				cb->grid[current_row--][index[l]] = ONE_l;
+			}
 		}
-		if (r != -1 && bdd->node_array[r].decision_variable != 0) {
-			cb->grid[cb->rows-i][current_col] = (literal) {v, !positive};
-			if (r == bdd->nodes) --r;
-			cb->grid[cb->rows-r][current_col++] = ONE_l;
+		if (bdd->node_array[r].decision_variable != 0) {
+			literal val = {v, !positive};
+			if (row_or_column[node] == 1 && row_or_column[r] == 2) {
+				cb->grid[index[node]][index[r]] = val;
+			} else if (row_or_column[node] == 2 && row_or_column[r] == 1) {
+				cb->grid[index[r]][index[node]] = val;
+			} else if (row_or_column[node] == 1 && row_or_column[r] == 1) {
+				cb->grid[index[node]][current_col] = val;
+				cb->grid[index[r]][current_col++] = ONE_l;
+			} else if (row_or_column[node] == 2 && row_or_column[r] == 2) {
+				cb->grid[current_row][index[node]] = val;
+				cb->grid[current_row--][index[r]] = ONE_l;
+			}
 		}
 	}
 	save_crossbar(cb, crossbar_filename);
