@@ -7,7 +7,7 @@
 #include "BDD.h"
 #include "crossbar.h"
 #include "SOP.h"
-#include "NDDD.h"
+#include "NDD.h"
 #include "expression.h"
 
 // Conversion
@@ -21,18 +21,18 @@ typedef struct crossbar_workspace {
 	int rows;
 	int cols;
 	literal **grid;
-	NDDD **row_pointers;
-	NDDD **col_pointers;
+	NDD **row_pointers;
+	NDD **col_pointers;
 } crossbar_workspace;
-crossbar_workspace *create_crossbar_workspace(NDDD *nddd);
+crossbar_workspace *create_crossbar_workspace(NDD *ndd);
 void free_crossbar_workspace(crossbar_workspace *cbws, crossbar *cb);
-void convert_NDDD_to_crossbar_helper(NDDD *nddd, crossbar_workspace *cbws, int row, int col);
-crossbar *convert_NDDD_to_crossbar(NDDD *nddd);
+void convert_NDD_to_crossbar_helper(NDD *ndd, crossbar_workspace *cbws, int row, int col);
+crossbar *convert_NDD_to_crossbar(NDD *ndd);
 
-NDDD *convert_SOP_to_NDDD(SOP *sop);
+NDD *convert_SOP_to_NDD(SOP *sop);
 void convert_SOP_to_crossbar(char *sop_filename, char *crossbar_filename);
 
-NDDD *convert_expression_to_NDDD(expr_node *en);
+NDD *convert_expression_to_NDD(expr_node *en);
 void convert_expression_to_crossbar(char *expr_filename, char *crossbar_filename);
 
 // Verification

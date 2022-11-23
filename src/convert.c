@@ -218,7 +218,7 @@ void check_equivalence_BDD_crossbar(char *bdd_filename, char *crossbar_filename)
 
 // the basic principle: find the most common literal, and split the problem into 2 smaller SOPs
 // ex: SOP -> a(SOP1) + SOP2. SOP1 is a's child and SOP2 is its sibling.
-NDDD *convert_SOP_to_NDDD(SOP *sop) {
+NDD *convert_SOP_to_NDD(SOP *sop) {
 	// base case: empty SOP returns a null pointer
 	if (sop->nterms == 0) {
 		return NULL;
@@ -285,19 +285,19 @@ NDDD *convert_SOP_to_NDDD(SOP *sop) {
 	}
 
 	// final recursive step
-	NDDD *nddd = malloc(sizeof(NDDD));
-	nddd->nvars = sop->nvars;
-	nddd->val = (literal) {max_var + 1, max_i};
-	nddd->child = convert_SOP_to_NDDD(sop1);
-	nddd->sibling = convert_SOP_to_NDDD(sop2);
+	NDD *ndd = malloc(sizeof(NDD));
+	ndd->nvars = sop->nvars;
+	ndd->val = (literal) {max_var + 1, max_i};
+	ndd->child = convert_SOP_to_NDD(sop1);
+	ndd->sibling = convert_SOP_to_NDD(sop2);
 
 	free_SOP_clone(sop1);
 	free_SOP_clone(sop2);
 
-	return nddd;
+	return ndd;
 }
 
-crossbar_workspace *create_crossbar_workspace(NDDD *nddd) {
+crossbar_workspace *create_crossbar_workspace(NDD *ndd) {
 	crossbar_workspace *cbws = malloc(sizeof(crossbar_workspace));	
 	// inital rows: input and output
 	cbws->rows = 2;
@@ -306,9 +306,9 @@ crossbar_workspace *create_crossbar_workspace(NDDD *nddd) {
 	for (int i = 0; i < MAX_CROSSBAR_SIZE; ++i) {
 		cbws->grid[i] = calloc(MAX_CROSSBAR_SIZE, sizeof(literal));
 	}
-	cbws->row_pointers = malloc(MAX_CROSSBAR_SIZE * sizeof(NDDD *));
-	cbws->col_pointers = malloc(MAX_CROSSBAR_SIZE * sizeof(NDDD *));
-	cbws->row_pointers[0] = nddd;
+	cbws->row_pointers = malloc(MAX_CROSSBAR_SIZE * sizeof(NDD *));
+	cbws->col_pointers = malloc(MAX_CROSSBAR_SIZE * sizeof(NDD *));
+	cbws->row_pointers[0] = ndd;
 	cbws->row_pointers[1] = NULL;
 	return cbws;
 }
@@ -327,9 +327,9 @@ void free_crossbar_workspace(crossbar_workspace *cbws, crossbar *cb) {
 	free(cbws);
 }
 
-void convert_NDDD_to_crossbar_helper(NDDD *nddd, crossbar_workspace *cbws, int row, int col) {
+void convert_NDD_to_crossbar_helper(NDD *ndd, crossbar_workspace *cbws, int row, int col) {
 	// base case: we've reached the output
-	if (nddd == NULL) {
+	if (ndd == NULL) {
 		return;
 	}
 
@@ -338,89 +338,89 @@ void convert_NDDD_to_crossbar_helper(NDDD *nddd, crossbar_workspace *cbws, int r
 	if (col == -1) {
 		// search columns for child node pointer and empty intersection
 		for (int c = 0; c < cbws->cols; ++c) {
-			if (cbws->col_pointers[c] == nddd->child && is_zero_l(cbws->grid[row][c])) {
-				cbws->grid[row][c] = nddd->val;
-				convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, row, -1);
+			if (cbws->col_pointers[c] == ndd->child && is_zero_l(cbws->grid[row][c])) {
+				cbws->grid[row][c] = ndd->val;
+				convert_NDD_to_crossbar_helper(ndd->sibling, cbws, row, -1);
 				return;
 			}
 		}
 
 		// search rows for child node pointer and merge that row with a new column
 		for (int r = 0; r < cbws->rows; ++r) {
-			if (cbws->row_pointers[r] == nddd->child) {
-				cbws->col_pointers[cbws->cols] = nddd->child;
+			if (cbws->row_pointers[r] == ndd->child) {
+				cbws->col_pointers[cbws->cols] = ndd->child;
 				cbws->grid[r][cbws->cols] = ONE_l;
-				cbws->grid[row][cbws->cols++] = nddd->val;
-				convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, row, -1);
+				cbws->grid[row][cbws->cols++] = ndd->val;
+				convert_NDD_to_crossbar_helper(ndd->sibling, cbws, row, -1);
 				return;
 			}
 		}
 
 		// search columns for child node pointer and merge that column with a new column
 		for (int c = 0; c < cbws->cols; ++c) {
-			if (cbws->col_pointers[c] == nddd->child) {
-				cbws->col_pointers[cbws->cols] = nddd->child;
-				cbws->row_pointers[cbws->rows] = nddd->child;
+			if (cbws->col_pointers[c] == ndd->child) {
+				cbws->col_pointers[cbws->cols] = ndd->child;
+				cbws->row_pointers[cbws->rows] = ndd->child;
 				cbws->grid[cbws->rows][cbws->cols] = ONE_l;
 				cbws->grid[cbws->rows++][c] = ONE_l;
-				cbws->grid[row][cbws->cols++] = nddd->val;
-				convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, row, -1);
+				cbws->grid[row][cbws->cols++] = ndd->val;
+				convert_NDD_to_crossbar_helper(ndd->sibling, cbws, row, -1);
 				return;
 			}
 		}
 
 		// child hasn't been implemented yet; make it a new column
-		cbws->col_pointers[cbws->cols] = nddd->child;
-		cbws->grid[row][cbws->cols] = nddd->val;
-		convert_NDDD_to_crossbar_helper(nddd->child, cbws, -1, cbws->cols++);
-		convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, row, -1);
+		cbws->col_pointers[cbws->cols] = ndd->child;
+		cbws->grid[row][cbws->cols] = ndd->val;
+		convert_NDD_to_crossbar_helper(ndd->child, cbws, -1, cbws->cols++);
+		convert_NDD_to_crossbar_helper(ndd->sibling, cbws, row, -1);
 	} else {
 		// search rows for child node pointer and empty intersection
 		for (int r = 0; r < cbws->rows; ++r) {
-			if (cbws->row_pointers[r] == nddd->child && is_zero_l(cbws->grid[r][col])) {
-				cbws->grid[r][col] = nddd->val;
-				convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, -1, col);
+			if (cbws->row_pointers[r] == ndd->child && is_zero_l(cbws->grid[r][col])) {
+				cbws->grid[r][col] = ndd->val;
+				convert_NDD_to_crossbar_helper(ndd->sibling, cbws, -1, col);
 				return;
 			}
 		}
 
 		// search cols for child node pointer and merge that column with a new row
 		for (int c = 0; c < cbws->cols; ++c) {
-			if (cbws->col_pointers[c] == nddd->child) {
-				cbws->row_pointers[cbws->rows] = nddd->child;
+			if (cbws->col_pointers[c] == ndd->child) {
+				cbws->row_pointers[cbws->rows] = ndd->child;
 				cbws->grid[cbws->rows][c] = ONE_l;
-				cbws->grid[cbws->rows++][col] = nddd->val;
-				convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, -1, col);
+				cbws->grid[cbws->rows++][col] = ndd->val;
+				convert_NDD_to_crossbar_helper(ndd->sibling, cbws, -1, col);
 				return;
 			}
 		}
 
 		// search rows for child node pointer and merge that row with a new row
 		for (int r = 0; r < cbws->rows; ++r) {
-			if (cbws->row_pointers[r] == nddd->child) {
-				cbws->row_pointers[cbws->rows] = nddd->child;
-				cbws->col_pointers[cbws->cols] = nddd->child;
+			if (cbws->row_pointers[r] == ndd->child) {
+				cbws->row_pointers[cbws->rows] = ndd->child;
+				cbws->col_pointers[cbws->cols] = ndd->child;
 				cbws->grid[cbws->rows][cbws->cols] = ONE_l;
 				cbws->grid[r][cbws->cols++] = ONE_l;
-				cbws->grid[cbws->rows++][col] = nddd->val;
-				convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, -1, col);
+				cbws->grid[cbws->rows++][col] = ndd->val;
+				convert_NDD_to_crossbar_helper(ndd->sibling, cbws, -1, col);
 				return;
 			}
 		}
 
 		// child hasn't been implemented yet; make it a new row
-		cbws->row_pointers[cbws->rows] = nddd->child;
-		cbws->grid[cbws->rows][col] = nddd->val;
-		convert_NDDD_to_crossbar_helper(nddd->child, cbws, cbws->rows++, -1);
-		convert_NDDD_to_crossbar_helper(nddd->sibling, cbws, -1, col);
+		cbws->row_pointers[cbws->rows] = ndd->child;
+		cbws->grid[cbws->rows][col] = ndd->val;
+		convert_NDD_to_crossbar_helper(ndd->child, cbws, cbws->rows++, -1);
+		convert_NDD_to_crossbar_helper(ndd->sibling, cbws, -1, col);
 	}
 }
 
-crossbar *convert_NDDD_to_crossbar(NDDD *nddd) {
-	crossbar_workspace *cbws = create_crossbar_workspace(nddd);
-	convert_NDDD_to_crossbar_helper(nddd, cbws, 0, -1);
+crossbar *convert_NDD_to_crossbar(NDD *ndd) {
+	crossbar_workspace *cbws = create_crossbar_workspace(ndd);
+	convert_NDD_to_crossbar_helper(ndd, cbws, 0, -1);
 	crossbar *cb = malloc(sizeof(crossbar));
-	cb->vars = nddd->nvars;
+	cb->vars = ndd->nvars;
 	cb->rows = cbws->rows;
 	cb->cols = cbws->cols;
 	cb->grid = cbws->grid;
@@ -441,27 +441,27 @@ crossbar *convert_NDDD_to_crossbar(NDDD *nddd) {
 
 void convert_SOP_to_crossbar(char *sop_filename, char *crossbar_filename) {
 	SOP *sop = read_SOP(sop_filename);
-	NDDD *nddd = convert_SOP_to_NDDD(sop);
+	NDD *ndd = convert_SOP_to_NDD(sop);
 	free_SOP(sop);
-	crossbar *cb = convert_NDDD_to_crossbar(nddd);
-	free_NDDD(nddd);
+	crossbar *cb = convert_NDD_to_crossbar(ndd);
+	free_NDD(ndd);
 	save_crossbar(cb, crossbar_filename);
 	free_crossbar(cb);
 }
 
-NDDD *convert_expression_to_NDDD(expr_node *en) {
+NDD *convert_expression_to_NDD(expr_node *en) {
 	if (en->op == 0) {
-		NDDD *nddd = calloc(1, sizeof(NDDD));
-		nddd->nvars = en->nvars;
-		nddd->val = en->val;
-		return nddd;
+		NDD *ndd = calloc(1, sizeof(NDD));
+		ndd->nvars = en->nvars;
+		ndd->val = en->val;
+		return ndd;
 	}
 	
-	NDDD *left = convert_expression_to_NDDD(en->left_child);
-	NDDD *right = convert_expression_to_NDDD(en->right_child);
+	NDD *left = convert_expression_to_NDD(en->left_child);
+	NDD *right = convert_expression_to_NDD(en->right_child);
 	
 	if (en->op == '+') {
-		NDDD *tail = left;
+		NDD *tail = left;
 		while (tail->sibling != NULL) {
 			tail = tail->sibling;
 		}
@@ -470,16 +470,16 @@ NDDD *convert_expression_to_NDDD(expr_node *en) {
 	}
 
 	// inefficient; visited hashmap will prevent exponential runtime
-	void dfs(NDDD *nddd) {
-		if (nddd == NULL || nddd == right) {
+	void dfs(NDD *ndd) {
+		if (ndd == NULL || ndd == right) {
 			return;
 		}
-		if (nddd->child == NULL) {
-			nddd->child = right;
+		if (ndd->child == NULL) {
+			ndd->child = right;
 		} else {
-			dfs(nddd->child);
+			dfs(ndd->child);
 		}
-		dfs(nddd->sibling);
+		dfs(ndd->sibling);
 	}
 	dfs(left);
 
@@ -489,9 +489,9 @@ NDDD *convert_expression_to_NDDD(expr_node *en) {
 void convert_expression_to_crossbar(char *expr_filename, char *crossbar_filename) {
 	expr_node *en = read_expression(expr_filename);
 	// print_expression(en);
-	NDDD *nddd = convert_expression_to_NDDD(en);
+	NDD *ndd = convert_expression_to_NDD(en);
 	free_expression(en);
-	crossbar *cb = convert_NDDD_to_crossbar(nddd);
+	crossbar *cb = convert_NDD_to_crossbar(ndd);
 	save_crossbar(cb, crossbar_filename);
 	free_crossbar(cb);
 }
